@@ -26,7 +26,6 @@ import typing as tp
 
 T = tp.TypeVar('T')
 
-
 def get_dataframes() -> tp.Tuple[DataFrame, DataFrame, DataFrame]:
     req = requests.get(
         "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv"
@@ -37,6 +36,21 @@ def get_dataframes() -> tp.Tuple[DataFrame, DataFrame, DataFrame]:
         county_df['county'] = county_df['county'].apply(str.upper)
         county_df['state'] = county_df['state'].apply(str.upper)
         county_df['date'] = pd.to_datetime(county_df['date'])
+
+        # TODO: Only append the state abbreviation that have duplicated counties
+        # county_count_df = county_df[['state', 'county', 'cases']].groupby(
+        #     ['state', 'county'],
+        #     as_index=False).first().groupby(['county']).count()['state'].reset_index()
+
+        # dup_counties_df = county_count_df[
+        #     county_count_df['state'] > 1].reset_index()
+
+        # update_df = dup_counties_df[['county']].set_index('county').join(county_df.set_index('county')).reset_index()
+        # update_df['county_new'] = update_df['county'] + '-' + update_df['state'].apply(lambda s: STATE_ABVS[s])
+
+        # Simple solution for duplicated counties
+        county_df['county'] = county_df['county'] + '-' + county_df[
+            'state'].apply(lambda s: STATE_ABVS[s])
 
         state_df = county_df[['date', 'state', 'cases',
                               'deaths']].groupby(['date', 'state'
